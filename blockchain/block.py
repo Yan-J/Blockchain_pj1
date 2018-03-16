@@ -171,7 +171,7 @@ class Block(ABC, persistent.Persistent):
                 # (or twice in this block; you will have to check this manually) [test_double_tx_inclusion_same_block]
                 # (you may find chain.get_chain_ending_with and chain.blocks_containing_tx and util.nonempty_intersection useful)
 
-
+            input_ref_set = set([])
             for tx in self.transactions:
                 # for every input ref in the tx
                 sender = []
@@ -207,8 +207,19 @@ class Block(ABC, persistent.Persistent):
                     # On failure: return False, "User inconsistencies"
 
                     # no input_ref has been spent in a previous block on this chain [test_doublespent_input_same_chain]
+                    if input_ref in chain.blocks_spending_input:
+                        fork = False
+                        for bk_hash in chain.blocks_spending_input[input_ref]:
+                            if chain.blocks[bk_hash].height == self.height:
+                                fork = True
+                        if not fork:
+                            return False, "Double-spent input"
                     # (or in this block; you will have to check this manually) [test_doublespent_input_same_block]
                     # (you may find nonempty_intersection and chain.blocks_spending_input helpful here)
+                    if input_ref in input_ref_set:
+                        return False, "Double-spent input"
+                    else:
+                        input_ref_set.add(input_ref)
                     # On failure: return False, "Double-spent input"
 
                     # each input_ref points to a transaction on the same blockchain as this block [test_input_txs_on_chain]
