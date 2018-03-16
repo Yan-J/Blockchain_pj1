@@ -174,6 +174,7 @@ class Block(ABC, persistent.Persistent):
 
             for tx in self.transactions:
                 # for every input ref in the tx
+                sender = []
                 for input_ref in tx.input_refs:
                     input_ref_split = input_ref.split(':',1)
                     input_tx_hash = input_ref_split[0]
@@ -184,16 +185,24 @@ class Block(ABC, persistent.Persistent):
                     if input_tx_hash in chain.all_transactions:
                         if output_idx >= len(chain.all_transactions[input_tx_hash].outputs):
                             return False, "Required output not found"
-                    if input_tx_hash in tx_map:
+                        else:
+                            input_tran = chain.all_transactions[input_tx_hash].outputs[output_idx]
+                    elif input_tx_hash in tx_map:
                         if output_idx >= len(tx_map[input_tx_hash].outputs):
                             return False, "Required output not found"
+                        else:
+                            input_tran = tx_map[input_tx_hash].outputs[output_idx]
 
                     # (you may find the string split method for parsing the input into its components)
                     # each input_ref is valid (aka corresponding transaction can be looked up in its holding transaction) [test_failed_input_lookup]
                     # (you may find chain.all_transactions useful here)
                     # On failure: return False, "Required output not found"
 
-                    
+                    if len(sender) == 0:
+                        sender.append(input_tran.receiver)
+                    else:
+                        if input_tran.receiver != sender[0]:
+                            return False, "User inconsistencies"
                     # every input was sent to the same user (would normally carry a signature from this user; we leave this out for simplicity) [test_user_consistency]
                     # On failure: return False, "User inconsistencies"
 
@@ -208,6 +217,9 @@ class Block(ABC, persistent.Persistent):
                     # On failure: return False, "Input transaction not found"
 
                 # for every output in the tx
+                for tran_output in tx.outputs:
+                    if sender and (tran_output.sender != sender[0]):
+                        return False, "User inconsistencies"
                     # every output was sent from the same user (would normally carry a signature from this user; we leave this out for simplicity)
                     # (this MUST be the same user as the outputs are locked to above) [test_user_consistency]
                     # On failure: return False, "User inconsistencies"
