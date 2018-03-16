@@ -106,7 +106,6 @@ class Block(ABC, persistent.Persistent):
         """
 
         chain = blockchain.chain # This object of type Blockchain may be useful
-
         # Placeholder for (1a)
 
         # (checks that apply to all blocks)
@@ -128,13 +127,15 @@ class Block(ABC, persistent.Persistent):
         # (checks that apply to genesis block)
             # Check that height is 0 and parent_hash is "genesis" [test_invalid_genesis]
             # On failure: return False, "Invalid genesis"
-        if (self.height == 0 and (not self.parent_hash == "genesis")) or (
-            self.parent_hash == "genesis" and (not self.height == 0)):
+        if (self.height == 0 and self.parent_hash != "genesis") or (self.parent_hash == "genesis" and self.height != 0):
             return False, "Invalid genesis"
 
         # (checks that apply only to non-genesis blocks)
             # Check that parent exists (you may find chain.blocks helpful) [test_nonexistent_parent]
             # On failure: return False, "Nonexistent parent"
+        if self.height != 0 and self.parent_hash != "genesis":
+            if self.parent_hash not in chain.blocks:
+                return False, "Nonexistent parent"
 
             # Check that height is correct w.r.t. parent height [test_bad_height]
             # On failure: return False, "Invalid height"
