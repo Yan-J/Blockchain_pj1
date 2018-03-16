@@ -177,9 +177,12 @@ class Block(ABC, persistent.Persistent):
             for tx in self.transactions:
                 # for every input ref in the tx
                 sender = []
-                for input_ref in tx.input_refs: # "tx1:0"
+                in_val = 0
+                out_val = 0
+
+                for input_ref in tx.input_refs:
                     input_ref_split = input_ref.split(':',1)
-                    input_tx_hash = input_ref_split[0] #tx1
+                    input_tx_hash = input_ref_split[0]
                     output_idx = int(input_ref_split[1])
 
                     if (input_tx_hash not in chain.all_transactions) and (input_tx_hash not in tx_map):
@@ -194,6 +197,8 @@ class Block(ABC, persistent.Persistent):
                             return False, "Required output not found"
                         else:
                             input_tran = tx_map[input_tx_hash].outputs[output_idx]
+
+                    in_val += input_tran.amount
 
                     # (you may find the string split method for parsing the input into its components)
                     # each input_ref is valid (aka corresponding transaction can be looked up in its holding transaction) [test_failed_input_lookup]
@@ -247,8 +252,13 @@ class Block(ABC, persistent.Persistent):
                     # every output was sent from the same user (would normally carry a signature from this user; we leave this out for simplicity)
                     # (this MUST be the same user as the outputs are locked to above) [test_user_consistency]
                     # On failure: return False, "User inconsistencies"
+                    out_val += tran_output.amount
+
+
                 # the sum of the input values is at least the sum of the output values (no money created out of thin air) [test_no_money_creation]
                 # On failure: return False, "Creating money"
+                if in_val < out_val:
+                    return False, "Creating money"
 
         return True, "All checks passed"
 
