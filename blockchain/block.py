@@ -159,13 +159,15 @@ class Block(ABC, persistent.Persistent):
                     return False, "Malformed transaction included"
 
             # Check that for every transaction
+            tx_set = set([])
             for tx in self.transactions:
                 if tx.hash in chain.blocks_containing_tx:
                     return False, "Double transaction inclusion"
-
-
                 # the transaction has not already been included on a block on the same blockchain as this block [test_double_tx_inclusion_same_chain]
-
+                if tx.hash in tx_set:
+                    return False, "Double transaction inclusion"
+                else:
+                    tx_set.add(tx.hash)
                 # (or twice in this block; you will have to check this manually) [test_double_tx_inclusion_same_block]
                 # (you may find chain.get_chain_ending_with and chain.blocks_containing_tx and util.nonempty_intersection useful)
 
