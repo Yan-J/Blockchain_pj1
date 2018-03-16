@@ -162,7 +162,9 @@ class Block(ABC, persistent.Persistent):
             tx_map = {}
             for tx in self.transactions:
                 if tx.hash in chain.blocks_containing_tx:
-                    return False, "Double transaction inclusion"
+                    for bk_hash in chain.blocks_containing_tx[tx.hash]:
+                        if chain.blocks[bk_hash].height != self.height:
+                            return False, "Double transaction inclusion"
                 # the transaction has not already been included on a block on the same blockchain as this block [test_double_tx_inclusion_same_chain]
                 if tx.hash in tx_map:
                     return False, "Double transaction inclusion"
@@ -175,9 +177,9 @@ class Block(ABC, persistent.Persistent):
             for tx in self.transactions:
                 # for every input ref in the tx
                 sender = []
-                for input_ref in tx.input_refs:
+                for input_ref in tx.input_refs: # "tx1:0"
                     input_ref_split = input_ref.split(':',1)
-                    input_tx_hash = input_ref_split[0]
+                    input_tx_hash = input_ref_split[0] #tx1
                     output_idx = int(input_ref_split[1])
 
                     if (input_tx_hash not in chain.all_transactions) and (input_tx_hash not in tx_map):
@@ -221,6 +223,17 @@ class Block(ABC, persistent.Persistent):
                     else:
                         input_ref_set.add(input_ref)
                     # On failure: return False, "Double-spent input"
+
+                    input_tx_fnd = False
+                    if input_tx_hash in tx_map:
+                        input_tx_fnd = True
+                    elif input_tx_hash in chain.blocks_containing_tx:
+                            for bk_hash in chain.blocks_containing_tx[input_tx_hash]:
+                                if chain.blocks[bk_hash].height < self.height:
+                                    input_tx_fnd = True
+
+                    if not input_tx_fnd:
+                        return False, "Input transaction not found"
 
                     # each input_ref points to a transaction on the same blockchain as this block [test_input_txs_on_chain]
                     # (or in this block; you will have to check this manually) [test_input_txs_in_block]
