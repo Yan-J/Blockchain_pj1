@@ -124,9 +124,13 @@ class Block(ABC, persistent.Persistent):
         # On failure: return False, "Too many transactions"
         if len(self.transactions) > 900:
             return False, "Too many transactions"
+
         # (checks that apply to genesis block)
             # Check that height is 0 and parent_hash is "genesis" [test_invalid_genesis]
             # On failure: return False, "Invalid genesis"
+        if (self.height == 0 and (not self.parent_hash == "genesis")) or (
+            self.parent_hash == "genesis" and (not self.height == 0)):
+            return False, "Invalid genesis"
 
         # (checks that apply only to non-genesis blocks)
             # Check that parent exists (you may find chain.blocks helpful) [test_nonexistent_parent]
