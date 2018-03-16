@@ -90,9 +90,20 @@ class Blockchain(persistent.Persistent):
 
         # (hint): you may find the is_genesis flag helpful in this method
         # as well as the self.blocks data structure
+        if (not self.blocks) or (not (block_hash in self.blocks)):
+            return []
+
+        get_chain = []
+        cur_hash = block_hash
+        while self.blocks[cur_hash].is_genesis == 0 :
+            get_chain.append(cur_hash)
+            cur_hash = self.blocks[cur_hash].parent_hash
+
+        get_chain.append(cur_hash)
+        return get_chain
 
         # Placeholder for (1a)
-        return [block_hash]
+        # return [block_hash]
 
     def get_all_block_weights(self):
         """ Get total weight for every block in the blockchain database.
