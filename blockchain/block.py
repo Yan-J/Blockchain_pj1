@@ -171,12 +171,26 @@ class Block(ABC, persistent.Persistent):
                 # (or twice in this block; you will have to check this manually) [test_double_tx_inclusion_same_block]
                 # (you may find chain.get_chain_ending_with and chain.blocks_containing_tx and util.nonempty_intersection useful)
 
-                # for every input ref in the tx
-                    # (you may find the string split method for parsing the input into its components)
 
+            for tx in self.transactions:
+                # for every input ref in the tx
+                for input_ref in tx.input_refs:
+                    input_ref_split = input_ref.split(':',1)
+                    input_tx_hash = input_ref_split[0]
+                    output_idx = int(input_ref_split[1])
+
+                    if (input_tx_hash not in chain.all_transactions) and (input_tx_hash not in tx_set):
+                        return False, "Required output not found"
+                    if output_idx >= (len(chain.all_transactions) + len(self.transactions)):
+                        return False, "Required output not found"
+                    # (you may find the string split method for parsing the input into its components)
                     # each input_ref is valid (aka corresponding transaction can be looked up in its holding transaction) [test_failed_input_lookup]
                     # (you may find chain.all_transactions useful here)
                     # On failure: return False, "Required output not found"
+
+
+
+
 
                     # every input was sent to the same user (would normally carry a signature from this user; we leave this out for simplicity) [test_user_consistency]
                     # On failure: return False, "User inconsistencies"
