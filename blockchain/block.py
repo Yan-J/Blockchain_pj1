@@ -152,9 +152,11 @@ class Block(ABC, persistent.Persistent):
             if not self.seal_is_valid():
                 return False, "Invalid seal"
 
-
             # Check that all transactions within are valid (use tx.is_valid) [test_malformed_txs]
             # On failure: return False, "Malformed transaction included"
+            for transac in self.transactions:
+                if not transac.is_valid():
+                    return False, "Malformed transaction included"
 
             # Check that for every transaction
                 # the transaction has not already been included on a block on the same blockchain as this block [test_double_tx_inclusion_same_chain]
