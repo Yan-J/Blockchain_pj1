@@ -49,12 +49,15 @@ class PoABlock(Block):
         # make sure to check that output is valid seal with provided code
 
         # Placeholder for (2)
-        header = self.unsealed_header().encode("utf-8")
-        private_key = SigningKey.from_string(self.get_private_key(), curve=NIST192p)
-        public_key = VerifyingKey.from_string(self.get_public_key())
-        signature = private_key.sign(header)
-        num = int.from_bytes(signature, byteorder='big')
-        self.set_seal_data(num)
+        while True:
+            header = self.unsealed_header().encode("utf-8")
+            private_key = SigningKey.from_string(self.get_private_key(), curve=NIST192p)
+            public_key = VerifyingKey.from_string(self.get_public_key())
+            signature = private_key.sign(header)
+            num = int.from_bytes(signature, byteorder='big')
+            self.set_seal_data(num)
+            if self.seal_is_valid:
+                break
 
 
     def calculate_appropriate_target(self):
