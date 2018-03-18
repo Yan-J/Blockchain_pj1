@@ -4,7 +4,8 @@ from blockchain.block import Block
 import config
 import binascii
 import ecdsa
-from ecdsa import SigningKey, VerifyingKey
+from ecdsa import SigningKey, VerifyingKey, NIST192p, NIST521p, NIST384p
+from ecdsa.util import number_to_string, string_to_number
 
 class PoABlock(Block):
     """ Extends Block, adding proof-of-work primitives. """
