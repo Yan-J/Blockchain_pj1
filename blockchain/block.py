@@ -4,6 +4,7 @@ from blockchain.util import sha256_2_string, encode_as_str
 import time
 import persistent
 from blockchain.util import nonempty_intersection
+from hashlib import sha256 as sha
 
 class Block(ABC, persistent.Persistent):
 
@@ -37,6 +38,8 @@ class Block(ABC, persistent.Persistent):
         self.seal_data = 0 # temporarily set seal_data to 0
         self.hash = self.calculate_hash() # keep track of hash for caching purposes
 
+
+       
     def calculate_merkle_root(self):
         """ Gets the Merkle root hash for a given list of transactions.
 
@@ -50,8 +53,28 @@ class Block(ABC, persistent.Persistent):
         """
 
         # Placeholder for (BONUS)
-        all_txs_as_string = "".join([str(x) for x in self.transactions])
+        #all_txs_as_string = "".join([str(x) for x in self.transactions])
+        all_txs_as_string = self.get_merkle_tree(self.transactions)
         return sha256_2_string(all_txs_as_string)
+
+    def sep(self, line, num):
+        for i in range(0, len(line), num):
+            yield line[i:i + num]
+
+    def get_merkle_tree(self, transactions):
+        #https://gist.github.com/brandomr/f5f325a0e9161d481714efe00d846880
+        sub_tree = []
+        for i in self.sep(transactions, 2):
+            if len(i) == 2:
+                hash = sha(str(i[0] + i[1])).hexdigest()
+            else:
+                hash = sha(str(i[0] + i[0])).hexdigest()
+            sub_tree.append(hash)
+        print(sub_tree)
+        if len(sub_tree) == 1:
+            return sub_tree[0]
+        else:
+            return self.get_merkle_tree(sub_tree)
 
     def unsealed_header(self):
         """ Computes the header string of a block (the component that is sealed by mining).
