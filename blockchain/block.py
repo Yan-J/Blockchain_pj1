@@ -54,7 +54,7 @@ class Block(ABC, persistent.Persistent):
 
         # Placeholder for (BONUS)
         #all_txs_as_string = "".join([str(x) for x in self.transactions])
-        all_txs_as_string = str(self.get_merkle_tree(self.transactions))
+        all_txs_as_string = self.get_merkle_tree(self.transactions)
         return sha256_2_string(all_txs_as_string)
 
     def sep(self, line, num):
